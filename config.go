@@ -7,6 +7,7 @@ import (
 )
 
 type Config struct {
+	Mail    []string
 	Targets []Target
 }
 
@@ -26,7 +27,7 @@ func readConfig(filename string) Config {
 			log.Fatal(err)
 		}
 
-		// config file just created		
+		// config file just created
 		err := json.NewEncoder(file).Encode(config)
 		if err != nil {
 			log.Fatal(err)
