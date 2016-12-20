@@ -7,21 +7,28 @@ import (
 )
 
 type Config struct {
-	Mail    []string
-	Targets []Target
+	MailServer     string
+	MailServerPort int
+	Sender         string
+	Mails          []string
+	Targets        []Target
 }
 
 // Opening (or creating) config file in JSON format
 func readConfig(filename string) Config {
 
 	config := Config{
-		Targets: []Target{Target{Name: "Local HTTP Server", Addr: "localhost:80"}},
+		MailServer:     "smpt.smals.be",
+		MailServerPort: 25,
+		Sender:         "pingos@smals.be",
+		Mails:          []string{"xavier.zebier@smals.be", "patrick.alin@smals.be"},
+		Targets:        []Target{Target{Name: "Local HTTP Server", Addr: "localhost:80"}},
 	}
 
 	file, err := os.Open(filename)
 	defer file.Close()
 	if err != nil {
-		// unaccessible or not exisiting file -> creatoin
+		// unaccessible or not existing file -> creatoin
 		file, err = os.Create(filename)
 		if err != nil {
 			log.Fatal(err)

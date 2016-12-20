@@ -47,7 +47,7 @@ func main() {
 		startTarget(target, res, end)
 	}
 
-	// HTTP	
+	// HTTP
 
 	go startHttp(*httpPort, state)
 	go startBrowser(*httpPort, fmt.Sprintf("http://localhost:%d/status", *httpPort))
@@ -62,6 +62,7 @@ func main() {
 				if s.Online != status.Online {
 					s.Online = status.Online
 					s.Since = status.Since
+					go sendMail(s, config)
 				}
 				s.LastCheck = status.Since
 				status = s

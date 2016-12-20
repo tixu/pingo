@@ -1,0 +1,1 @@
+{"MailServer":"mailpi.smals.be","MailServerPort":25,"Sender":"pingos@smals.be","Mails":["xavier.zebier@smals.be","patrick.alin@smals.be"],"Targets":[{"Name":"Local HTTP Server","Addr":"localhost:2015","Interval":0}]}
