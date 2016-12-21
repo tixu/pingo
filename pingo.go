@@ -13,6 +13,11 @@ import (
 var filename = flag.String("f", "config.json", "JSON configuration file")
 var httpPort = flag.Int("p", 8888, "HTTP port")
 
+var (
+	Version string
+	Build   string
+)
+
 func startBrowser(port int, url string) {
 	var err error
 	switch runtime.GOOS {
@@ -30,6 +35,10 @@ func startBrowser(port int, url string) {
 
 // Main function
 func main() {
+	log.Println("=============================")
+	log.Println("Version: ", Version)
+	log.Println("Git commit hash: ", Build)
+	log.Println("=============================")
 
 	flag.Parse()
 
