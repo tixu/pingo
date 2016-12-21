@@ -47,13 +47,12 @@ func runTarget(t Target, res chan TargetStatus, end chan int) {
 		f := testers[t.Test]
 		if f != nil {
 			status = httpTest(&t)
-
 			res <- status
 		}
 		// waiting to ticker
 		<-ticker
 	}
-	end <- 1
+
 }
 
 func dialTest(t *Target) TargetStatus {

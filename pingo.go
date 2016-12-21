@@ -72,6 +72,9 @@ func main() {
 			state.Lock.Lock()
 			if s, ok := state.State[status.Target]; ok {
 				if s.Online != status.Online {
+					fmt.Printf("received %+v\n", status)
+					fmt.Printf("is %+v\n", s)
+
 					s.Online = status.Online
 					s.Since = status.Since
 					go sendMail(s, config)

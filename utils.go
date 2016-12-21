@@ -15,7 +15,7 @@ func sendMail(s TargetStatus, c Config) {
 			message := fmt.Sprintf("%s is ok", s.Target.Name)
 			m.SetBody("text/html", message)
 		} else {
-			message := fmt.Sprintf("%s is ok", s.Target.Name)
+			message := fmt.Sprintf("%s is not ok", s.Target.Name)
 			m.SetBody("text/html", message)
 		}
 		//m.Attach("/home/Alex/lolcat.jpg")
