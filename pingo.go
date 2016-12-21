@@ -12,7 +12,10 @@ import (
 
 var filename = flag.String("f", "config.json", "JSON configuration file")
 var httpPort = flag.Int("p", 8888, "HTTP port")
-
+var testers map[string]testFun = map[string]testFun{
+	"dial": dialTest,
+	"http": httpTest,
+}
 var (
 	Version string
 	Build   string
