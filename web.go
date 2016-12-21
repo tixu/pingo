@@ -47,6 +47,9 @@ var tpl = template.Must(
 	<body ng-app>
 		<div id="main" style="margin: auto">
 			<h1>Pingo</h1>
+			<ol>
+				{{Version}}
+			</ol>
 			<div id="targets" ng-controller="targetController">
 				<p>Total number of targets : <strong>{{targets.length}}</strong></p>
 				Search: <input ng-model="q"/>
@@ -75,6 +78,7 @@ var tpl = template.Must(
 				</ul>
 			</div>
 		</div>
+
 	</body>
 	</html>
 	`))

@@ -22,7 +22,7 @@ func readConfig(filename string) Config {
 		MailServerPort: 25,
 		Sender:         "pingos@smals.be",
 		Mails:          []string{"xavier.zebier@smals.be", "patrick.alin@smals.be"},
-		Targets:        []Target{Target{Name: "Local HTTP Server", Addr: "localhost:80"}},
+		Targets:        []Target{{Name: "Local HTTP Server", Addr: "localhost:80"}},
 	}
 
 	file, err := os.Open(filename)

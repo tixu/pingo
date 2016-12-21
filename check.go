@@ -15,11 +15,14 @@ type Target struct {
 	Interval int64
 }
 
+type test func(target string) bool
+
 type TargetStatus struct {
 	Target    *Target
 	Online    bool
 	Since     time.Time
 	LastCheck time.Time
+	Test      string
 }
 
 func startTarget(t Target, res chan TargetStatus, end chan int) {
@@ -36,17 +39,20 @@ func runTarget(t Target, res chan TargetStatus, end chan int) {
 	for {
 		// Polling
 
-		var status TargetStatus
-		conn, err := net.Dial("tcp", t.Addr)
+		//var status TargetStatus
+
+		status := dialTest(t)
+
+		/* conn, err := net.Dial("tcp", t.Addr)
 
 		if err != nil {
 			// Connect ok
 			status = TargetStatus{Target: &t, Online: false, Since: time.Now()}
 		} else {
-			// Error during connect
 			status = TargetStatus{Target: &t, Online: true, Since: time.Now()}
 			conn.Close()
 		}
+		*/
 
 		res <- status
 
@@ -54,4 +60,14 @@ func runTarget(t Target, res chan TargetStatus, end chan int) {
 		<-ticker
 	}
 	end <- 1
+}
+
+func dialTest(t Target) TargetStatus {
+	conn, err := net.Dial("tcp", t.Addr)
+	if err != nil {
+		return TargetStatus{Target: &t, Online: false, Since: time.Now()}
+	}
+	conn.Close()
+	return TargetStatus{Target: &t, Online: true, Since: time.Now()}
+
 }
