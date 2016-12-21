@@ -47,9 +47,6 @@ var tpl = template.Must(
 	<body ng-app>
 		<div id="main" style="margin: auto">
 			<h1>Pingo</h1>
-			<ol>
-				{{Version}}
-			</ol>
 			<div id="targets" ng-controller="targetController">
 				<p>Total number of targets : <strong>{{targets.length}}</strong></p>
 				Search: <input ng-model="q"/>
@@ -86,6 +83,7 @@ var tpl = template.Must(
 func startHttp(port int, state *State) {
 	http.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
 		state.Lock.Lock()
+		fmt.Println(len(state.State))
 		defer state.Lock.Unlock()
 
 		err := tpl.Execute(w, state)
