@@ -1,1 +1,8 @@
-    {"MailServer":"mailpi.smals.be","MailServerPort":25,"Sender":"pingos@smals.be","Mails":["xavier.zebier@smals.be"],"Targets":[{"Name":"Caddy","Addr":"http://localhost:2015","Interval":50,"test":"http"},{"Name":"MM","Addr":"https://mm.smals.be","Interval":60,"test":"http"}]}
+    {"MailServer":"mailpi.smals.be","MailServerPort":25,"Sender":"pingos@smals.be",
+    "Mails":["xavier.zebier@smals.be"],
+    "Targets":[{"Name":"Caddy","Addr":"http://localhost:2015","Interval":50,"test":"http"},
+               {"Name":"MM","Addr":"https://mm.smals.be","Interval":60,"test":"http"},
+               {"Name":"Jenkins", "Addr":"http://albanil01.smals.be:8080/jenkins/overallLoad/api/xml","Interval":60,"test":"http"},
+               {"Name":"Artifactory", "Addr":"http://albanil01.smals.be:8081/artifactory/webapp/#/home","Interval":60,"test":"http"}
+               ]
+               }

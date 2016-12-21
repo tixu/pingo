@@ -12,10 +12,12 @@ import (
 
 var filename = flag.String("f", "config.json", "JSON configuration file")
 var httpPort = flag.Int("p", 8888, "HTTP port")
+
 var testers map[string]testFun = map[string]testFun{
 	"dial": dialTest,
 	"http": httpTest,
 }
+
 var (
 	Version string
 	Build   string
@@ -38,6 +40,7 @@ func startBrowser(port int, url string) {
 
 // Main function
 func main() {
+
 	log.Println("=============================")
 	log.Println("Version: ", Version)
 	log.Println("Git commit hash: ", Build)

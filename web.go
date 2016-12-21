@@ -14,7 +14,7 @@ func Now() string {
 }
 
 // Init of the Web Page template.
-var tpl = template.Must(template.New("main").Delims("<%", "%>").Funcs(template.FuncMap{"Now": Now, "json": json.Marshal}).ParseFiles("./index.html"))
+var tpl = template.Must(template.New("main").Delims("<%", "%>").Funcs(template.FuncMap{"Now": Now, "json": json.Marshal}).ParseFiles("./tmpl/status.tmpl"))
 
 func startHttp(port int, state *State) {
 
@@ -26,7 +26,7 @@ func startHttp(port int, state *State) {
 		fmt.Println(len(state.State))
 		defer state.Lock.Unlock()
 
-		err := tpl.ExecuteTemplate(w, "index.html", state)
+		err := tpl.ExecuteTemplate(w, "status.tmpl", state)
 		if err != nil {
 			log.Fatal(err)
 		}
