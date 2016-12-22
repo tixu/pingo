@@ -13,29 +13,45 @@
   <body>
     <div id="app" class = "page-header">
       <h1>Pingo : smals monitoring application</small></h1>
-	   <div class="panel panel-default">
+	  </div>
+     <div class="panel panel-default">
 	   <div id="heading" class="panel-heading">
                     <h3 class="panel-title">Status</h3>
-      <p> Nombre de systeme monitoré : {{ nbr }}</p>
+      <p> Nombre de systeme monitoré : <span class="badge"> {{ nbr }} </span></p>
       </div>
       <div class="panel-body">
         <div id="app-4" >
-          <ol>
-            <li v-for="todo in todos">
-              {{ todo.Target.Name }}
-            </li>
-          </ol>
+          <table class="table">   
+            <tr>
+              <th>Name</th>
+              <th>Online</th>
+              <th>Since</th>
+              <th>Update</th>
+            </tr>
+             <tr v-for="todo in todos">
+             <td>{{ todo.Target.Name }}</td> 
+             <td> <p v-if="todo.Online"><span class="label label-success"> Alive </span></p> <p v-else><span class="label label-danger">Dead</span></p></td>
+             <td>{{ todo.Since }}</td>
+             <td>{{ todo.LastCheck }}</td>
+            </tr>
+          </table>
        </div>
       </div>
+      
 			<div id ="footer" class="panel-footer">{{ message }} </div>
       </div>
-	  
-    </div>
+	
     
   </body>
 
   <script src="https://unpkg.com/vue@2.0.3/dist/vue.js"></script>
-
+<script type="text/javascript">
+  var timeout = setTimeout("location.reload(true);",10000);
+  function resetTimeout() {
+    clearTimeout(timeout);
+    timeout = setTimeout("location.reload(true);",10000);
+  }
+</script>
   <script>
    var fruits = [];
     <% range $key, $value := .StateHolder.State %>
