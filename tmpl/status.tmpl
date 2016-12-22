@@ -1,53 +1,65 @@
-<html>
-	<head>
-		<script src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.0.0/moment.min.js"></script>
-		<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-		<script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.4/underscore-min.js"></script>
-		<script src="http://cdnjs.cloudflare.com/ajax/libs/handlebars.js/1.0.0-rc.3/handlebars.min.js"></script>
-		<script src="http://cdnjs.cloudflare.com/ajax/libs/angular.js/1.1.1/angular.min.js"></script>
-        <link   rel = "stylesheet" href="./static/app.css"/>
-       
-	    <script>
-		function targetController($scope){
-			$scope.targets = [];
-			<%range .State%>
-			$scope.targets.push(<% json . | printf "%s"  %>);
-			<%end%>
-		}
-		</script>
-		
-	</head>
-	<body ng-app>
-		<div id="main" style="margin: auto">
-			<h1>Pingo</h1>
-			<div id="targets" ng-controller="targetController">
-				<p>Total number of targets : <strong>{{targets.length}}</strong></p>
-				Search: <input ng-model="q"/>
-				<table>
-					<tr>
-						<th ng-switch on="by='Target.Name' & asc">
-							<a href ng-click="by = 'Target.Name'; asc=!asc">Name</a>
-							<span ng-switch-when="true">up</span>
-							<span ng-switch-default="false">up</span>
-						</th>
-						<th><a ng-click="by='Target.Addr';asc=!asc">Addr</a></th>
-						<th><a ng-click="by='Online';asc=!asc">Online</a></th>
-						<th><a ng-click="by='Since';asc=!asc">Since</a></th>
-						<th><a ng-click="by='lastCheck';asc=!asc">Last Update</a></th>
-					</tr>
-					<tr ng-repeat="t in targets | filter:q |orderBy:by:asc">
-						<td>{{t.Target.Name}}</td>
-						<td>{{t.Target.Addr}}</td>
-						<td ng-switch on="t.Online">
-							<span ng-switch-when="true" class="online">online</span>
-							<span ng-switch-when="false" class="offline">offline</span>
-						</td>
-						<td>{{t.Since}}</td>
-						<td>{{t.LastCheck}}</td>
-					</tr>
-				</ul>
-			</div>
-		</div>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Vue.JS Tutorial</title>
 
-	</body>
-	</html>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  </head>
+
+  <body>
+    <div id="app" class = "page-header">
+      <h1>Pingo : smals monitoring application</small></h1>
+	   <div class="panel panel-default">
+	   <div id="heading" class="panel-heading">
+                    <h3 class="panel-title">Status</h3>
+      <p> Nombre de systeme monitoré : {{ nbr }}</p>
+      </div>
+      <div class="panel-body">
+        <div id="app-4" >
+          <ol>
+            <li v-for="todo in todos">
+              {{ todo.Target.Name }}
+            </li>
+          </ol>
+       </div>
+      </div>
+			<div id ="footer" class="panel-footer">{{ message }} </div>
+      </div>
+	  
+    </div>
+    
+  </body>
+
+  <script src="https://unpkg.com/vue@2.0.3/dist/vue.js"></script>
+
+  <script>
+   var fruits = [];
+    <% range $key, $value := .StateHolder.State %>
+           fruits.push(<% json . | printf "%s"  %>);
+      <% end %>
+  
+    var app = new Vue({
+      el: '#heading',
+      data: {
+	    	nbr: <% len .StateHolder.State%>
+      }
+    })
+var list = new Vue({
+  el: '#app-4',
+  data: {
+    todos: fruits 
+}})
+
+var footer = new Vue({
+  el: '#footer',
+  data: {
+        message: 'version <% .Version%> - build : hash <% .Hash%>' 
+}})
+
+
+  </script>
+</html>

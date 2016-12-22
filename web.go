@@ -9,6 +9,12 @@ import (
 	"time"
 )
 
+type page struct {
+	Version     string
+	Hash        string
+	StateHolder *State
+}
+
 func Now() string {
 	return time.Now().Format("02/01/2006 15:04:05")
 }
@@ -18,6 +24,7 @@ var tpl = template.Must(template.New("main").Delims("<%", "%>").Funcs(template.F
 
 func startHttp(port int, state *State) {
 
+	p := page{Version: Version, Hash: Build, StateHolder: state}
 	http.HandleFunc("/static/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, r.URL.Path[1:])
 	})
@@ -26,7 +33,7 @@ func startHttp(port int, state *State) {
 		fmt.Println(len(state.State))
 		defer state.Lock.Unlock()
 
-		err := tpl.ExecuteTemplate(w, "status.tmpl", state)
+		err := tpl.ExecuteTemplate(w, "status.tmpl", p)
 		if err != nil {
 			log.Fatal(err)
 		}
