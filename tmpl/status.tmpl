@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Vue.JS Tutorial</title>
+    <title>Pingos</title>
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
@@ -31,15 +31,23 @@
             </tr>
              <tr v-for="todo in sortedFruits">
              <td><a href="todo.Target.Addr">{{ todo.Target.Name }}</a></td> 
-             <td> <p v-if="todo.Online"><span class="label label-success"> Alive </span></p> <p v-else><a href="#" onclick="toggle_visibility('foo');"><span class="label label-danger">Dead</span></p></a></td>
+             <td> <p v-if="todo.Online"><span v-bind:id="todo.Target.Name" class="label label-success"> Alive </span></p>
+                  <p v-else><span class="label label-danger" v-bind:id = "todo.Target.Name" v-on:click="hide"  >Dead</span></p>
+             </td>
              <td>{{ todo.Since }}</td>
              <td>{{ todo.LastCheck }}</td>
             </tr>
 
           </table>
+           <template v-for="todo in todos">
+              <div   v-bind:id = "'error_'+todo.Target.Name" style="display:none">{{ todo.Target.Name}}</div>
+               
+          </template>
+      
        </div>
-        <div id="foo" style="display:none">This is foo</div>
-      </div>
+      
+      <div >
+          
       
 			<div id ="footer" class="panel-footer">{{ message }} </div>
       </div>
@@ -47,12 +55,12 @@
     
   </body>
 
-  <script src="https://unpkg.com/vue@2.0.3/dist/vue.js"></script>
+  <script src="https://unpkg.com/vue@2.1.6/dist/vue.js"></script>
 <script type="text/javascript">
-  var timeout = setTimeout("location.reload(true);",10000);
+  var timeout = setTimeout("location.reload(true);",1000000);
   function resetTimeout() {
     clearTimeout(timeout);
-    timeout = setTimeout("location.reload(true);",10000);
+    timeout = setTimeout("location.reload(true);",1000000);
   }
 </script>
   <script>
@@ -68,9 +76,10 @@
   } 
 
    function toggle_visibility(id) {
+     
        var e = document.getElementById(id);
        if(e.style.display == 'block')
-          e.style.display = 'none';
+          e.style.display   = 'none';
        else
           e.style.display = 'block';
     }
@@ -100,12 +109,20 @@
 var list = new Vue({
   el: '#app-4',
   data: {
-    todos: fruits 
+    todos: fruits ,
+    todos2:fruits
   },
   computed : {
     sortedFruits: function() {
       return this.todos.sort(compare)
     }
+  },
+  methods : {
+    hide : function (event) {
+       alert('Hello ' + event.target.id + '!')
+      toggle_visibility("error_"+event.target.id);
+     
+       },  
   }
   })
 
