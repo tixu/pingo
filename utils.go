@@ -2,6 +2,7 @@ package main
 
 import gomail "gopkg.in/gomail.v2"
 import "fmt"
+import "log"
 
 func sendMail(s TargetStatus, c Config) {
 
@@ -22,7 +23,7 @@ func sendMail(s TargetStatus, c Config) {
 
 		d := gomail.Dialer{Host: "mailpi.smals.be", Port: 25}
 		if err := d.DialAndSend(m); err != nil {
-			panic(err)
+			log.Println(err)
 		}
 	}
 }

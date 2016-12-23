@@ -17,7 +17,8 @@
      <div class="panel panel-default">
 	   <div id="heading" class="panel-heading">
                     <h3 class="panel-title">Status</h3>
-      <p> Nombre de systeme monitoré : <span class="badge"> {{ nbr }} </span></p>
+      <p><span class="badge"> total:{{ total }} </span> (<span  class="label label-danger">deads: {{ deads }}</span>/<span class="label label-success">alives: {{ alives }} </span>)
+     
       </div>
       <div class="panel-body">
         <div id="app-4" >
@@ -28,14 +29,16 @@
               <th>Since</th>
               <th>Update</th>
             </tr>
-             <tr v-for="todo in todos">
-             <td>{{ todo.Target.Name }}</td> 
-             <td> <p v-if="todo.Online"><span class="label label-success"> Alive </span></p> <p v-else><span class="label label-danger">Dead</span></p></td>
+             <tr v-for="todo in sortedFruits">
+             <td><a href="todo.Target.Addr">{{ todo.Target.Name }}</a></td> 
+             <td> <p v-if="todo.Online"><span class="label label-success"> Alive </span></p> <p v-else><a href="#" onclick="toggle_visibility('foo');"><span class="label label-danger">Dead</span></p></a></td>
              <td>{{ todo.Since }}</td>
              <td>{{ todo.LastCheck }}</td>
             </tr>
+
           </table>
        </div>
+        <div id="foo" style="display:none">This is foo</div>
       </div>
       
 			<div id ="footer" class="panel-footer">{{ message }} </div>
@@ -53,6 +56,25 @@
   }
 </script>
   <script>
+  function compare(a,b) {
+  if (a.Target.Name < b.Target.Name)
+    return -1;
+  if (a.Target.Name > b.Target.Name)
+    return 1;
+  return 0;
+}
+  function alive (a) {
+    return a.Online
+  } 
+
+   function toggle_visibility(id) {
+       var e = document.getElementById(id);
+       if(e.style.display == 'block')
+          e.style.display = 'none';
+       else
+          e.style.display = 'block';
+    }
+
    var fruits = [];
     <% range $key, $value := .StateHolder.State %>
            fruits.push(<% json . | printf "%s"  %>);
@@ -61,14 +83,31 @@
     var app = new Vue({
       el: '#heading',
       data: {
-	    	nbr: <% len .StateHolder.State%>
+	    	todos: fruits
+      },
+      computed : {
+        total : function () {
+             return this.todos.length
+        },
+        alives : function() {
+          return this.todos.filter(alive).length
+        },
+        deads : function(){
+          return this.total - this.alives
+        }
       }
     })
 var list = new Vue({
   el: '#app-4',
   data: {
     todos: fruits 
-}})
+  },
+  computed : {
+    sortedFruits: function() {
+      return this.todos.sort(compare)
+    }
+  }
+  })
 
 var footer = new Vue({
   el: '#footer',

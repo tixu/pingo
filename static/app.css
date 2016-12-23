@@ -12,3 +12,4 @@ td{ border-bottom: 1px solid #999;}
 .online{ background-color: #3E3; color: #FFF; padding: 3px 5px; border-radius: 5px}
 .offline{ background-color: #E33; color: #FFF; padding: 3px 5px; border-radius: 5px}
 .time{ font-size: 0.8em }
+.hidden{display: block;}
