@@ -40,7 +40,10 @@
 
           </table>
            <template v-for="todo in todos">
-              <div   v-bind:id = "'error_'+todo.Target.Name" style="display:none">{{ todo.Target.Name}}</div>
+            <div class="panel panel-danger" v-bind:id = "'error_'+todo.Target.Name" style="display:none">
+             <div class="panel-heading">{{ todo.Target.Name}}</div>
+              <div class="panel-body"><p>{{ todo.Target.Name}}</p></div>
+             </div>
                
           </template>
       
@@ -119,7 +122,6 @@ var list = new Vue({
   },
   methods : {
     hide : function (event) {
-       alert('Hello ' + event.target.id + '!')
       toggle_visibility("error_"+event.target.id);
      
        },  
