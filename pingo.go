@@ -75,18 +75,20 @@ func main() {
 			state.Lock.Lock()
 			if s, ok := state.State[status.Target]; ok {
 				if s.Online != status.Online {
-					fmt.Printf("received %+v\n", status)
-					fmt.Printf("is %+v\n", s)
 
 					s.Online = status.Online
 					s.Since = status.Since
+					s.Error = status.Error
 					go sendMail(s, config)
 				}
 				s.LastCheck = status.Since
 				status = s
 			} else {
 				status.LastCheck = status.Since
+				//status.Error = s.Error
 			}
+			fmt.Println("pingo ===>", status)
+
 			state.State[status.Target] = status
 
 			state.Lock.Unlock()

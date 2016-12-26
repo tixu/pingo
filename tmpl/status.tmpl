@@ -42,7 +42,7 @@
            <template v-for="todo in todos">
             <div class="panel panel-danger" v-bind:id = "'error_'+todo.Target.Name" style="display:none">
              <div class="panel-heading">{{ todo.Target.Name}}</div>
-              <div class="panel-body"><p>{{ todo.Target.Name}}</p></div>
+              <div class="panel-body"><p>{{ todo.Error }}</p></div>
              </div>
                
           </template>

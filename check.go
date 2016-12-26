@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -27,6 +28,7 @@ type TargetStatus struct {
 	Since     time.Time
 	LastCheck time.Time
 	Test      string
+	Error     string
 }
 
 func startTarget(t Target, res chan TargetStatus, end chan int) {
@@ -42,7 +44,7 @@ func runTarget(t Target, res chan TargetStatus, end chan int) {
 	ticker := time.Tick(time.Duration(t.Interval) * time.Second)
 	for {
 		// Polling
-
+		log.Println("pinging", t.Addr)
 		var status TargetStatus
 		f := testers[t.Test]
 		if f != nil {
@@ -58,10 +60,10 @@ func runTarget(t Target, res chan TargetStatus, end chan int) {
 func dialTest(t *Target) TargetStatus {
 	conn, err := net.Dial("tcp", t.Addr)
 	if err != nil {
-		return TargetStatus{Target: t, Online: false, Since: time.Now()}
+		return TargetStatus{Target: t, Online: false, Since: time.Now(), Test: "dial", Error: fmt.Sprintf("dial checker error : %s", err)}
 	}
 	conn.Close()
-	return TargetStatus{Target: t, Online: true, Since: time.Now()}
+	return TargetStatus{Target: t, Online: true, Since: time.Now(), Error: ""}
 
 }
 
@@ -69,14 +71,14 @@ func httpTest(t *Target) TargetStatus {
 
 	res, err := http.Get(t.Addr)
 	if err != nil {
-		log.Println(err)
-		return TargetStatus{Target: t, Online: false, Since: time.Now()}
+
+		return TargetStatus{Target: t, Online: false, Since: time.Now(), Test: "http", Error: fmt.Sprintf("http checker error : %s", err)}
 	}
 
 	if res.StatusCode != http.StatusOK {
-		log.Println("bad code", res.StatusCode)
-		return TargetStatus{Target: t, Online: false, Since: time.Now()}
+		err := fmt.Errorf("bad status code %d", res.StatusCode)
+		return TargetStatus{Target: t, Online: false, Since: time.Now(), Test: "http", Error: fmt.Sprintf("http checker error : %s", err)}
 	}
-	return TargetStatus{Target: t, Online: true, Since: time.Now()}
+	return TargetStatus{Target: t, Online: true, Since: time.Now(), Test: "http", Error: ""}
 
 }

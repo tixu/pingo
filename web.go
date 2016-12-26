@@ -30,7 +30,7 @@ func startHttp(port int, state *State) {
 	})
 	http.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
 		state.Lock.Lock()
-		fmt.Println(len(state.State))
+
 		defer state.Lock.Unlock()
 
 		err := tpl.ExecuteTemplate(w, "status.tmpl", p)
