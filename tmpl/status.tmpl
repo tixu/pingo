@@ -29,22 +29,25 @@
               <th>Since</th>
               <th>Update</th>
             </tr>
-             <tr v-for="todo in sortedFruits">
-             <td><a href="todo.Target.Addr">{{ todo.Target.Name }}</a></td> 
-             <td> <p v-if="todo.Online"><span v-bind:id="todo.Target.Name" class="label label-success"> Alive </span></p>
-                  <p v-else><span class="label label-danger" v-bind:id = "todo.Target.Name" v-on:click="hide"  >Dead</span></p>
+             <tr v-for="todo in sortedtargets">
+             <td><a v-bind:href="todo.Target.Addr">{{ todo.Target.Name }}</a></td> 
+             <td> <p v-if="todo.Online"><span v-bind:id="todo.Target.Name" class="label label-success"  v-on:click="hideOK"> Alive </span></p>
+                  <p v-else><span class="label label-danger" v-bind:id = "todo.Target.Name" v-on:click="hideBad"  >Dead</span></p>
              </td>
              <td>{{ todo.Since }}</td>
              <td>{{ todo.LastCheck }}</td>
             </tr>
 
           </table>
-           <template v-for="todo in todos">
+           <template v-for="todo in servers">
             <div class="panel panel-danger" v-bind:id = "'error_'+todo.Target.Name" style="display:none">
              <div class="panel-heading">{{ todo.Target.Name}}</div>
               <div class="panel-body"><p>{{ todo.Error }}</p></div>
              </div>
-               
+               <div class="panel panel-success" v-bind:id = "'ok_'+todo.Target.Name" style="display:none">
+             <div class="panel-heading">{{ todo.Target.Name}}</div>
+              <div class="panel-body"><p>{{ todo.Stats }}</p></div>
+             </div>
           </template>
       
        </div>
@@ -87,22 +90,22 @@
           e.style.display = 'block';
     }
 
-   var fruits = [];
+   var targets = [];
     <% range $key, $value := .StateHolder.State %>
-           fruits.push(<% json . | printf "%s"  %>);
+           targets.push(<% json . | printf "%s"  %>);
       <% end %>
   
     var app = new Vue({
       el: '#heading',
       data: {
-	    	todos: fruits
+	    	servers: targets
       },
       computed : {
         total : function () {
-             return this.todos.length
+             return this.servers.length
         },
         alives : function() {
-          return this.todos.filter(alive).length
+          return this.servers.filter(alive).length
         },
         deads : function(){
           return this.total - this.alives
@@ -112,17 +115,21 @@
 var list = new Vue({
   el: '#app-4',
   data: {
-    todos: fruits ,
-    todos2:fruits
+    servers: targets ,
+   
   },
   computed : {
-    sortedFruits: function() {
-      return this.todos.sort(compare)
+    sortedtargets: function() {
+      return this.servers.sort(compare)
     }
   },
   methods : {
-    hide : function (event) {
+    hideBad : function (event) {
       toggle_visibility("error_"+event.target.id);
+     
+       },  
+  hideOK : function (event) {
+      toggle_visibility("ok_"+event.target.id);
      
        },  
   }
@@ -136,4 +143,5 @@ var footer = new Vue({
 
 
   </script>
+
 </html>

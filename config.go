@@ -9,6 +9,7 @@ import (
 type Config struct {
 	MailServer     string
 	MailServerPort int
+	WorkerNumber   int
 	Sender         string
 	Mails          []string
 	Targets        []Target
@@ -19,6 +20,7 @@ func readConfig(filename string) Config {
 
 	config := Config{
 		MailServer:     "smpt.smals.be",
+		WorkerNumber:   2,
 		MailServerPort: 25,
 		Sender:         "pingos@smals.be",
 		Mails:          []string{"xavier.zebier@smals.be", "patrick.alin@smals.be"},

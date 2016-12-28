@@ -3,10 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"text/template"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 type page struct {

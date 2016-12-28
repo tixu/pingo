@@ -3,9 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
+
 	"os/exec"
 	"runtime"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 // Init config
@@ -55,11 +57,16 @@ func main() {
 
 	// Running
 	res := make(chan TargetStatus)
+	jobsQueue := make(chan Job)
 	end := make(chan int)
+
+	dispatcher := NewDispatcher(jobsQueue, res, config.WorkerNumber)
+	dispatcher.Run()
+
 	state := NewState()
 
 	for _, target := range config.Targets {
-		startTarget(target, res, end)
+		startTarget(target, res, end, jobsQueue)
 	}
 
 	// HTTP
@@ -69,29 +76,30 @@ func main() {
 
 	for {
 		select {
-		case <-end:
-			log.Println("One of the checker ended...")
+
 		case status := <-res:
-			state.Lock.Lock()
 			if s, ok := state.State[status.Target]; ok {
+				log.Println("target  found ", status.Target)
 				if s.Online != status.Online {
 
 					s.Online = status.Online
 					s.Since = status.Since
 					s.Error = status.Error
+					//	s.Stats = status.Stats
 					go sendMail(s, config)
 				}
 				s.LastCheck = status.Since
+				s.Stats = status.Stats
 				status = s
 			} else {
+				log.Println("target not found ", status.Target)
 				status.LastCheck = status.Since
-				//status.Error = s.Error
+				state.State[status.Target] = status
 			}
-			fmt.Println("pingo ===>", status)
+			log.Println("pingo ===>", status)
 
 			state.State[status.Target] = status
 
-			state.Lock.Unlock()
 		}
 	}
 

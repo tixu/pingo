@@ -2,7 +2,7 @@ package main
 
 import gomail "gopkg.in/gomail.v2"
 import "fmt"
-import "log"
+import log "github.com/Sirupsen/logrus"
 
 func sendMail(s TargetStatus, c Config) {
 
