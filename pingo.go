@@ -53,7 +53,8 @@ func startBrowser(port int, url string) {
 
 // Main function
 func main() {
-	defer profile.Start(profile.TraceProfile, profile.ProfilePath(".")).Stop()
+	x := profile.Start(profile.TraceProfile, profile.ProfilePath("."), profile.NoShutdownHook)
+
 	flag.Parse()
 
 	// Config
@@ -83,7 +84,9 @@ func main() {
 	go store(ctx, res, warn)
 
 	<-signalChan
+	x.Stop()
 	log.WithFields(log.Fields{"type": "Main"}).Println("This is the end")
+
 	server.Shutdown(ctx)
 	log.WithFields(log.Fields{"type": "server"}).Println("This is the end")
 	cancel()
