@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"math/rand"
 )
 
 var (
@@ -574,10 +575,10 @@ var (
 // formatted as "adjective_surname". For example 'focused_turing'. If retry is non-zero, a random
 // integer between 0 and 10 will be added to the end of the name, e.g `focused_turing3`
 func GetRandomName(retry int) string {
-	rnd := Rand
-	name := fmt.Sprintf("%s_%s", left[rnd.Intn(len(left))], right[rnd.Intn(len(right))])
+
+	name := fmt.Sprintf("%s_%s", left[rand.Intn(len(left))], right[rand.Intn(len(right))])
 	if retry > 0 {
-		name = fmt.Sprintf("%s%d", name, rnd.Intn(10))
+		name = fmt.Sprintf("%s%d", name, rand.Intn(10))
 	}
 	return name
 }

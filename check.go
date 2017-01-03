@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -11,25 +12,50 @@ import (
 	log "github.com/Sirupsen/logrus"
 
 	httpstat "github.com/tcnksm/go-httpstat"
+	"github.com/tixu/pingo/utils"
 )
 
-func startTarget(t Target, res chan TargetStatus, end chan int, jobsQueue chan Job) {
-	go runTarget(t, res, end, &jobsQueue)
+type Ticker struct {
+	ID     string
+	ticker <-chan time.Time
+	target Target
 }
 
-func runTarget(t Target, res chan TargetStatus, end chan int, jobsQueue *chan Job) {
+func makeTicker(target Target) *Ticker {
 
-	log.Println("starting runtarget on ", t.Name)
-	if t.Interval == 0 {
-		t.Interval = 1
+	ticker := make(<-chan time.Time)
+	id := utils.GetRandomName(0)
+	return &Ticker{ID: id, ticker: ticker, target: target}
+}
+
+func (tik *Ticker) startTarget(ctx context.Context, jobsQueue chan Job) {
+	log.WithFields(log.Fields{"type": "Ticker", "name": tik.ID}).Infoln("starting ticker")
+	go tik.runTarget(ctx, &jobsQueue)
+}
+
+func (tik *Ticker) runTarget(ctx context.Context, jobsQueue *chan Job) {
+
+	log.WithFields(log.Fields{"type": "Ticker", "name": tik.ID}).Infoln("starting target", tik.target.Name)
+	if tik.target.Interval == 0 {
+		panic("interval not allowed")
 	}
-	ticker := time.Tick(time.Duration(t.Interval) * time.Second)
-	for {
-		log.Println("posting", t)
-		*jobsQueue <- Job{t}
-		// waiting to ticker
-		<-ticker
-	}
+
+	tik.ticker = time.Tick(time.Duration(tik.target.Interval) * time.Second)
+
+	go func(ctx context.Context, t *Target) {
+		for {
+			select {
+			case <-tik.ticker:
+				log.WithFields(log.Fields{"type": "Ticker", "name": tik.ID}).Infoln("posting", t)
+				*jobsQueue <- Job{*t}
+				// waiting to ticker
+			case <-ctx.Done():
+				log.WithFields(log.Fields{"type": "Ticker", "name": tik.ID}).Infoln("stopping ticker ")
+				return
+			}
+
+		}
+	}(ctx, &tik.target)
 
 }
 
@@ -57,16 +83,18 @@ func httpTest(t Target) TargetStatus {
 
 	client := http.DefaultClient
 	res, err := client.Do(req)
+
 	if err != nil {
 		return TargetStatus{Target: t, Online: false, Since: time.Now(), Test: "http", Error: fmt.Sprintf("http checker error : %s", err)}
+
 	}
 
+	defer res.Body.Close()
 	if _, err := io.Copy(ioutil.Discard, res.Body); err != nil {
 		return TargetStatus{Target: t, Online: false, Since: time.Now(), Test: "http", Error: fmt.Sprintf("http checker error : %s", err)}
 	}
-	res.Body.Close()
+
 	stats := httpstats(&result, time.Now())
-	//result.End(time.Now())
 
 	if res.StatusCode != http.StatusOK {
 		err := fmt.Errorf("bad status code %d", res.StatusCode)

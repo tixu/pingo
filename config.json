@@ -1,12 +1,7 @@
     {"MailServer":"mailpi.smals.be","MailServerPort":25,"Sender":"pingos@smals.be",
     "Mails":["xavier.zebier@smals.be"],
-    "WorkerNumber":2,
-    "Targets":[{"Name":"Caddy","Addr":"http://localhost:2015","Interval":10,"test":"http"}, 
-               {"Name":"unamur","Addr":"https://www.unamur.be/en","Interval":60,"test":"http"},
-               {"Name":"Github","Addr": "https://github.com/status", "Interval":60,"test":"http"},
-               {"Name":"Gitlab","Addr": "https://status.gitlab.com", "Interval":60,"test":"http"},
-               {"Name":"CircleCI","Addr": "https://status.circleci.com/", "Interval":60,"test":"http"}
-               
-               ]
+    "WorkerNumber":4,
+    "Targets":[{"Name":"Caddy","Addr":"http://localhost:2015","Interval":10,"test":"http"},
+               {"Name":"Google","Addr":"http://google.be","Interval":60,"test":"http"}]
 
                }

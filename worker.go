@@ -1,11 +1,10 @@
 package main
 
 import (
-	"fmt"
+	"context"
 
 	log "github.com/Sirupsen/logrus"
-
-	"github.com/tixu/pingo/utils"
+	utils "github.com/tixu/pingo/utils"
 )
 
 type Job struct {
@@ -17,24 +16,23 @@ type Worker struct {
 	Id            string
 	WorkerPool    chan chan Job
 	JobChannel    chan Job
-	ResultChannel chan TargetStatus
-	quit          chan bool
+	ResultChannel *chan TargetStatus
 }
 
-func NewWorker(workerPool chan chan Job, res chan TargetStatus) Worker {
-	return Worker{
+func NewWorker(workerPool chan chan Job, res *chan TargetStatus) *Worker {
+	return &Worker{
 		Id:            utils.GetRandomName(0),
 		WorkerPool:    workerPool,
 		JobChannel:    make(chan Job),
 		ResultChannel: res,
-		quit:          make(chan bool)}
+	}
 }
 
 // Start method starts the run loop for the worker, listening for a quit channel in
 // case we need to stop it
-func (w Worker) Start() {
-	log.Println("starting worker")
-	go func() {
+func (w *Worker) Start(ctx context.Context) {
+
+	go func(ctx context.Context) {
 		for {
 			// register the current worker into the worker queue.
 			w.WorkerPool <- w.JobChannel
@@ -42,68 +40,62 @@ func (w Worker) Start() {
 			select {
 			case job := <-w.JobChannel:
 				// we have received a work request.
-				log.Printf("%s receidved job %+v", w.Id, job)
+				log.WithFields(log.Fields{"type": "Worker", "name": w.Id}).Infof("%s receidved job %+v \n", w.Id, job)
+				status := testers[job.target.Test](job.target)
+				*w.ResultChannel <- status
 
-				var status TargetStatus
-				f := testers[job.target.Test]
-				if f != nil {
-					status = httpTest(job.target)
-					w.ResultChannel <- status
-				}
-
-			case <-w.quit:
-				// we have received a signal to stop
+			case <-ctx.Done():
+				log.WithFields(log.Fields{"type": "Worker", "name": w.Id}).Infoln("stopping", w.Id)
 				return
 			}
 		}
-	}()
-}
-
-// Stop signals the worker to stop listening for work requests.
-func (w Worker) Stop() {
-	go func() {
-		w.quit <- true
-	}()
+	}(ctx)
 }
 
 type Dispatcher struct {
 	// A pool of workers channels that are registered with the dispatcher
+	ID         string
 	WorkerPool chan chan Job
 	JobQueue   chan Job
-	ResChannel chan TargetStatus
+	ResChannel *chan TargetStatus
 	maxWorkers int
 }
 
-func NewDispatcher(jobqueue chan Job, res chan TargetStatus, maxWorkers int) *Dispatcher {
+func NewDispatcher(jobqueue chan Job, res *chan TargetStatus, maxWorkers int) *Dispatcher {
 	pool := make(chan chan Job, maxWorkers)
-	return &Dispatcher{WorkerPool: pool, maxWorkers: maxWorkers, JobQueue: jobqueue, ResChannel: res}
+	return &Dispatcher{ID: utils.GetRandomName(0), WorkerPool: pool, maxWorkers: maxWorkers, JobQueue: jobqueue, ResChannel: res}
 }
 
-func (d *Dispatcher) Run() {
+func (d *Dispatcher) Run(ctx context.Context) {
 	// starting n number of workers
 	for i := 0; i < d.maxWorkers; i++ {
 		worker := NewWorker(d.WorkerPool, d.ResChannel)
-		worker.Start()
+		log.WithFields(log.Fields{"type": "Dispatcher", "name": d.ID}).Infoln("starting worker ", worker.Id)
+		worker.Start(ctx)
 	}
 
-	go d.dispatch()
+	go d.dispatch(ctx)
 }
 
-func (d *Dispatcher) dispatch() {
+func (d *Dispatcher) dispatch(ctx context.Context) {
 	log.Println("starting to dispatch")
 	for {
 		select {
 		case job := <-d.JobQueue:
 			// a job request has been received
-			fmt.Println("a job request has been received for", job)
-			go func(job Job) {
+			log.WithFields(log.Fields{"type": "Dispatcher", "name": d.ID}).Infoln("a job request has been received for", job)
+			go func() {
 				// try to obtain a worker job channel that is available.
 				// this will block until a worker is idle
 				jobChannel := <-d.WorkerPool
 
 				// dispatch the job to the worker job channel
 				jobChannel <- job
-			}(job)
+
+			}()
+		case <-ctx.Done():
+			log.WithFields(log.Fields{"type": "Dispatcher", "name": d.ID}).Infoln("stopping")
+			return
 		}
 	}
 }

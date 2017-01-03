@@ -1,11 +1,20 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
+	"os"
+	"syscall"
 
 	"os/exec"
+	"os/signal"
 	"runtime"
+
+	"net/http"
+	_ "net/http/pprof"
+
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 )
@@ -23,6 +32,7 @@ var testers map[string]testFun = map[string]testFun{
 var (
 	Version string
 	Build   string
+	server  *http.Server
 )
 
 func startBrowser(port int, url string) {
@@ -43,11 +53,6 @@ func startBrowser(port int, url string) {
 // Main function
 func main() {
 
-	log.Println("=============================")
-	log.Println("Version: ", Version)
-	log.Println("Git commit hash: ", Build)
-	log.Println("=============================")
-
 	flag.Parse()
 
 	// Config
@@ -58,15 +63,19 @@ func main() {
 	// Running
 	res := make(chan TargetStatus)
 	jobsQueue := make(chan Job)
-	end := make(chan int)
 
-	dispatcher := NewDispatcher(jobsQueue, res, config.WorkerNumber)
-	dispatcher.Run()
+	dispatcher := NewDispatcher(jobsQueue, &res, config.WorkerNumber)
+	ctx, cancel := context.WithCancel(context.Background())
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+
+	dispatcher.Run(ctx)
 
 	state := NewState()
 
 	for _, target := range config.Targets {
-		startTarget(target, res, end, jobsQueue)
+		ticker := makeTicker(target)
+		ticker.startTarget(ctx, jobsQueue)
 	}
 
 	// HTTP
@@ -74,33 +83,45 @@ func main() {
 	go startHttp(*httpPort, state)
 	go startBrowser(*httpPort, fmt.Sprintf("http://localhost:%d/status", *httpPort))
 
-	for {
-		select {
+	go func(ctx context.Context) {
+		for {
+			select {
 
-		case status := <-res:
-			if s, ok := state.State[status.Target]; ok {
-				log.Println("target  found ", status.Target)
-				if s.Online != status.Online {
+			case status := <-res:
+				if s, ok := state.State[status.Target]; ok {
+					log.WithFields(log.Fields{"type": "Aggregator"}).Println("target  found ", status.Target)
+					if s.Online != status.Online {
 
-					s.Online = status.Online
-					s.Since = status.Since
-					s.Error = status.Error
-					//	s.Stats = status.Stats
-					go sendMail(s, config)
+						s.Online = status.Online
+						s.Since = status.Since
+						s.Error = status.Error
+						//	s.Stats = status.Stats
+						go sendMail(s, config)
+					}
+					s.LastCheck = status.Since
+					s.Stats = status.Stats
+					status = s
+				} else {
+					log.WithFields(log.Fields{"type": "Aggregator"}).Println("target not found ", status.Target)
+					status.LastCheck = status.Since
+					state.State[status.Target] = status
 				}
-				s.LastCheck = status.Since
-				s.Stats = status.Stats
-				status = s
-			} else {
-				log.Println("target not found ", status.Target)
-				status.LastCheck = status.Since
+				log.WithFields(log.Fields{"type": "Aggregator"}).Println("Status to send", status)
+
 				state.State[status.Target] = status
+
+			case <-ctx.Done():
+				log.WithFields(log.Fields{"type": "Aggregator"}).Println("stopping")
+				return
 			}
-			log.Println("pingo ===>", status)
-
-			state.State[status.Target] = status
-
 		}
-	}
 
+	}(ctx)
+
+	<-signalChan
+	log.WithFields(log.Fields{"type": "Main"}).Println("This is the end")
+	server.Shutdown(ctx)
+	log.WithFields(log.Fields{"type": "server"}).Println("This is the end")
+	cancel()
+	time.Sleep(25 * time.Second)
 }

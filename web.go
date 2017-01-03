@@ -26,10 +26,12 @@ var tpl = template.Must(template.New("main").Delims("<%", "%>").Funcs(template.F
 func startHttp(port int, state *State) {
 
 	p := page{Version: Version, Hash: Build, StateHolder: state}
-	http.HandleFunc("/static/", func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/static/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, r.URL.Path[1:])
 	})
-	http.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
+
 		state.Lock.Lock()
 
 		defer state.Lock.Unlock()
@@ -41,10 +43,9 @@ func startHttp(port int, state *State) {
 	})
 
 	s := fmt.Sprintf(":%d", port)
-	log.Println("starting to listen on ", s)
-	log.Printf("Get status on http://localhost%s/status", s)
 
-	err := http.ListenAndServe(s, nil)
+	server = &http.Server{Addr: s, Handler: mux}
+	err := server.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 	}
