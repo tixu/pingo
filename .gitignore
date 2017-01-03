@@ -1,1 +1,4 @@
 *.exe
+vendor/*
+*.out
+*.exe
