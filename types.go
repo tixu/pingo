@@ -1,14 +1,7 @@
 package main
 
-import (
-	"sync"
-	"time"
-)
+import "time"
 
-type State struct {
-	Lock  sync.Mutex
-	State map[Target]TargetStatus
-}
 type testFun func(t Target) TargetStatus
 
 type Target struct {
@@ -31,10 +24,4 @@ type TargetStatus struct {
 	Test      string
 	Error     string
 	Stats     map[string]time.Duration
-}
-
-func NewState() *State {
-	s := new(State)
-	s.State = make(map[Target]TargetStatus)
-	return s
 }

@@ -19,21 +19,22 @@ type Ticker struct {
 	ID     string
 	ticker <-chan time.Time
 	target Target
+	res    chan TargetStatus
 }
 
-func makeTicker(target Target) *Ticker {
+func makeTicker(target Target, res chan TargetStatus) *Ticker {
 
 	ticker := make(<-chan time.Time)
 	id := utils.GetRandomName(0)
-	return &Ticker{ID: id, ticker: ticker, target: target}
+	return &Ticker{ID: id, ticker: ticker, target: target, res: res}
 }
 
-func (tik *Ticker) startTarget(ctx context.Context, jobsQueue chan Job) {
+func (tik *Ticker) startTarget(ctx context.Context) {
 	log.WithFields(log.Fields{"type": "Ticker", "name": tik.ID}).Infoln("starting ticker")
-	go tik.runTarget(ctx, &jobsQueue)
+	go tik.runTarget(ctx)
 }
 
-func (tik *Ticker) runTarget(ctx context.Context, jobsQueue *chan Job) {
+func (tik *Ticker) runTarget(ctx context.Context) {
 
 	log.WithFields(log.Fields{"type": "Ticker", "name": tik.ID}).Infoln("starting target", tik.target.Name)
 	if tik.target.Interval == 0 {
@@ -46,9 +47,10 @@ func (tik *Ticker) runTarget(ctx context.Context, jobsQueue *chan Job) {
 		for {
 			select {
 			case <-tik.ticker:
-				log.WithFields(log.Fields{"type": "Ticker", "name": tik.ID}).Infoln("posting", t)
-				*jobsQueue <- Job{*t}
-				// waiting to ticker
+
+				status := testers[tik.target.Test](tik.target)
+				tik.res <- status
+
 			case <-ctx.Done():
 				log.WithFields(log.Fields{"type": "Ticker", "name": tik.ID}).Infoln("stopping ticker ")
 				return

@@ -17,6 +17,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/pkg/profile"
 )
 
 // Init config
@@ -52,7 +53,7 @@ func startBrowser(port int, url string) {
 
 // Main function
 func main() {
-
+	defer profile.Start(profile.TraceProfile, profile.ProfilePath(".")).Stop()
 	flag.Parse()
 
 	// Config
@@ -62,20 +63,16 @@ func main() {
 
 	// Running
 	res := make(chan TargetStatus)
-	jobsQueue := make(chan Job)
-
-	dispatcher := NewDispatcher(jobsQueue, &res, config.WorkerNumber)
+	warn := make(chan TargetStatus)
 	ctx, cancel := context.WithCancel(context.Background())
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 
-	dispatcher.Run(ctx)
-
-	state := NewState()
+	initStorage()
 
 	for _, target := range config.Targets {
-		ticker := makeTicker(target)
-		ticker.startTarget(ctx, jobsQueue)
+		ticker := makeTicker(target, res)
+		ticker.startTarget(ctx)
 	}
 
 	// HTTP
@@ -83,40 +80,7 @@ func main() {
 	go startHttp(*httpPort, state)
 	go startBrowser(*httpPort, fmt.Sprintf("http://localhost:%d/status", *httpPort))
 
-	go func(ctx context.Context) {
-		for {
-			select {
-
-			case status := <-res:
-				if s, ok := state.State[status.Target]; ok {
-					log.WithFields(log.Fields{"type": "Aggregator"}).Println("target  found ", status.Target)
-					if s.Online != status.Online {
-
-						s.Online = status.Online
-						s.Since = status.Since
-						s.Error = status.Error
-						//	s.Stats = status.Stats
-						go sendMail(s, config)
-					}
-					s.LastCheck = status.Since
-					s.Stats = status.Stats
-					status = s
-				} else {
-					log.WithFields(log.Fields{"type": "Aggregator"}).Println("target not found ", status.Target)
-					status.LastCheck = status.Since
-					state.State[status.Target] = status
-				}
-				log.WithFields(log.Fields{"type": "Aggregator"}).Println("Status to send", status)
-
-				state.State[status.Target] = status
-
-			case <-ctx.Done():
-				log.WithFields(log.Fields{"type": "Aggregator"}).Println("stopping")
-				return
-			}
-		}
-
-	}(ctx)
+	go store(ctx, res, warn)
 
 	<-signalChan
 	log.WithFields(log.Fields{"type": "Main"}).Println("This is the end")
